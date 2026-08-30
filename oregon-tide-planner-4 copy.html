@@ -1,0 +1,1178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Oregon Coast Low Tide Planner</title>
+    <style>
+      @font-face {
+        font-family: "Data";
+        src: url("fonts/Mileast Italic.otf");
+      }
+      @font-face {
+        font-family: "SF Mono";
+        src: url("fonts/SFMono-Regular.ttf");
+      }
+
+      :root {
+        --bg: #0c2b30;
+        --bg-deep: #081d21;
+        --panel: #123a41;
+        --panel-line: rgba(244, 241, 232, 0.14);
+        --foam: #f4f1e6;
+        --foam-dim: #cfcabb;
+        --ink: #0c2320;
+        --sand: #b9ac8c;
+        --kelp: #4b9a1d;
+        /*--kelp:#5a8f68;*/
+        --kelp-wilt: #154d26;
+        --kelp-dim: #3f6a4c;
+        --kelp-dark: #062510;
+        --amber: #dba24a;
+        --amber-dim: #c8892b;
+        --plum: #9a5b86;
+        --plum-dim: #6e3f5f;
+        --ocean: #48a3f6;
+        --danger: #c96a4f;
+        /*--serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;*/
+        --serif: "Data", serif;
+
+        --mono: "SF Mono", ui-monospace, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: radial-gradient(ellipse at top left, #0f3a41 0%, transparent 55%),
+          radial-gradient(ellipse at bottom right, #0a2226 0%, transparent 60%), var(--bg);
+        color: var(--foam);
+        font-family: var(--mono);
+        font-size: 14px;
+        line-height: 1.5;
+        min-height: 100vh;
+        padding: 0 0 60px 0;
+      }
+      a {
+        color: var(--amber);
+      }
+
+      /* ---------- Header ---------- */
+      header {
+        padding: 38px 24px 26px;
+        border-bottom: 1px solid var(--panel-line);
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.15), transparent);
+      }
+      .eyebrow {
+        font-family: var(--mono);
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        font-size: 11px;
+        color: var(--kelp);
+        margin: 0 0 10px;
+      }
+      h1 {
+        font-family: var(--serif);
+        font-weight: 400;
+        font-size: clamp(28px, 5vw, 44px);
+        margin: 0 0 10px;
+        color: var(--foam);
+        letter-spacing: 0.2px;
+        width: 420px;
+        padding: 0 0 0 10px;
+        background: linear-gradient(to top, var(--kelp-dark) 40%, transparent 0%);
+      }
+      header p {
+        max-width: 640px;
+        color: var(--foam-dim);
+        margin: 0;
+        font-size: 13.5px;
+      }
+
+      main {
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      /* ---------- Controls ---------- */
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--panel-line);
+        border-radius: 2px;
+        padding: 22px 24px;
+        margin-top: 24px;
+      }
+      .panel h2 {
+        font-family: var(--serif);
+        font-weight: 400;
+        font-size: 24px;
+        margin: 0 0 16px;
+        letter-spacing: 1px;
+        color: var(--foam);
+      }
+      .field-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 22px;
+        margin-bottom: 18px;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .field label {
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--sand);
+      }
+      .field input[type="date"],
+      .field input[type="time"],
+      .field input[type="number"] {
+        background: var(--bg-deep);
+        border: 1px solid var(--panel-line);
+        color: var(--foam);
+        padding: 7px 9px;
+        font-family: var(--mono);
+        font-size: 13px;
+        border-radius: 2px;
+      }
+      .quickbtns {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .quickbtns button {
+        background: var(--kelp-dark);
+        border: 1px solid var(--kelp-dim);
+        color: var(--kelp);
+        font-family: var(--mono);
+        font-size: 11.5px;
+        padding: 6px 10px;
+        border-radius: 20px;
+        cursor: pointer;
+      }
+      .quickbtns button:hover {
+        background: var(--kelp-wilt);
+        color: var(--foam);
+      }
+
+      .stations {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .station-chip {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid var(--panel-line);
+        padding: 6px 10px 6px 8px;
+        border-radius: 20px;
+        font-size: 12px;
+        cursor: pointer;
+        user-select: none;
+        color: var(--foam-dim);
+      }
+      .station-chip input {
+        accent-color: var(--kelp);
+      }
+      .station-chip.checked {
+        border-color: var(--kelp);
+        color: var(--foam);
+        background: var(--kelp-wilt);
+      }
+
+      .thresholds {
+        display: flex;
+        gap: 22px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+      }
+      .mode-toggle {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .mode-opt {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        border: 1px solid var(--panel-line);
+        border-radius: 2px;
+        padding: 12px 16px;
+        cursor: pointer;
+        flex: 1;
+        min-width: 220px;
+      }
+      .mode-opt input {
+        accent-color: var(--kelp);
+        margin-right: 8px;
+      }
+      .mode-opt.checked {
+        border-color: var(--kelp);
+        background: rgba(90, 143, 104, 0.1);
+      }
+      .mode-sub {
+        display: block;
+        font-size: 11px;
+        color: var(--sand);
+        margin-left: 22px;
+        margin-top: 2px;
+      }
+      .swatch {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 6px;
+      }
+
+      .run-btn {
+        margin-top: 18px;
+        background: var(--amber);
+        color: var(--bg-deep);
+        border: none;
+        font-family: var(--serif);
+        font-size: 18px;
+        padding: 12px 26px;
+        border-radius: 6px;
+        cursor: pointer;
+        letter-spacing: 1px;
+      }
+      .run-btn:hover {
+        background: var(--amber-dim);
+        color: var(--foam);
+      }
+      .run-btn:disabled {
+        opacity: 0.55;
+        cursor: default;
+      }
+
+      .status-line {
+        margin-top: 12px;
+        font-size: 12px;
+        color: var(--sand);
+        min-height: 16px;
+      }
+
+      /* ---------- Summary ---------- */
+      .summary {
+        margin-top: 28px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1px;
+        background: var(--panel-line);
+        border: 1px solid var(--panel-line);
+      }
+      .summary .cell {
+        background: var(--panel);
+        padding: 16px 18px;
+      }
+      .summary .cell .num {
+        font-family: var(--serif);
+        font-size: 26px;
+        letter-spacing:1px;
+        padding: 0 0 0 8px;
+        color: var(--amber);
+                background: linear-gradient(to top, var(--kelp-dark) 40%, transparent 0%);
+
+      }
+      .summary .cell .lbl {
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--sand);
+        margin-top: 4px;
+      }
+
+      /* ---------- King tide section ---------- */
+      .kingtide-wrap {
+        margin-top: 20px;
+      }
+      .kingtide-wrap summary {
+        cursor: pointer;
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 16px;
+        padding: 12px 0;
+        color: var(--plum);
+        border-top: 1px solid var(--panel-line);
+      }
+      .kingtide-list {
+        padding: 6px 0 10px;
+      }
+      .kt-row {
+        display: flex;
+        gap: 14px;
+        align-items: baseline;
+        padding: 5px 0;
+        font-size: 12.5px;
+        color: var(--foam-dim);
+        flex-wrap: wrap;
+      }
+      .kt-row .kt-h {
+        color: var(--plum);
+        font-family: var(--mono);
+        font-weight: bold;
+      }
+
+      /* ---------- Results ledger ---------- */
+      .ledger {
+        margin-top: 6px;
+      }
+      .day-group {
+        border-top: 1px solid var(--panel-line);
+        padding: 18px 0;
+      }
+      .day-head {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+      .day-head .date-big {
+        font-family: var(--serif);
+        font-size: 22px;
+        letter-spacing:1px;
+        color: var(--foam);
+      }
+      .day-head .date-sub {
+        font-size: 11.5px;
+        color: var(--sand);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .sun-line {
+        font-size: 11.5px;
+        color: var(--sand);
+        margin: -2px 0 10px;
+      }
+      .dark-tag {
+        font-size: 10px;
+        color: var(--danger);
+        border: 1px solid var(--danger);
+        padding: 2px 8px;
+        border-radius: 20px;
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
+      .event-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 8px 4px;
+        border-radius: 2px;
+        flex-wrap: wrap;
+      }
+      .event-row:hover {
+        background: rgba(244, 241, 232, 0.04);
+      }
+      .event-row .time {
+        width: 70px;
+        font-family: var(--mono);
+        font-size: 13px;
+        color: var(--foam);
+        flex-shrink: 0;
+      }
+      .row-check {
+        accent-color: var(--kelp);
+        width: 15px;
+        height: 15px;
+        flex-shrink: 0;
+      }
+      .add-single-btn {
+        margin-left: auto;
+        background: var(--kelp-dark);
+        border: 1px solid var(--kelp-dark);
+        color: var(--foam);
+        font-family: var(--mono);
+        font-size: 10.5px;
+        padding: 4px 9px;
+        border-radius: 20px;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .add-single-btn:hover {
+        background: var(--foam);
+        color: var(--kelp-dark);
+      }
+           .tip-btn {
+        margin-left: auto;
+             margin-top: 10px;
+        background: var(--kelp);
+        border: 2px solid var(--kelp);
+        color: var(--foam);
+        font-family: var(--mono);
+        font-size: 18px;
+        padding: 4px 9px;
+        border-radius: 20px;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .tip-btn:hover {
+        background: var(--kelp-dark);
+        color: var(--kelp);
+      }
+      .cal-bar {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        padding: 14px 18px;
+        margin-top: 1px;
+        background: var(--panel);
+        border: 1px solid var(--panel-line);
+        border-top: none;
+        font-size: 12px;
+      }
+      .cal-selall {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--foam-dim);
+        cursor: pointer;
+      }
+      .cal-selall input {
+        accent-color: var(--kelp);
+      }
+      .cal-count {
+        color: var(--sand);
+      }
+      .cal-btn {
+        background: var(--amber);
+        color: var(--bg-deep);
+        border: 1px solid var(--amber);
+        font-family: var(--mono);
+        font-weight: bold;
+        font-size: 12px;
+        padding: 8px 14px;
+        border-radius: 2px;
+        cursor: pointer;
+        border-radius:6px;
+      }
+      .cal-btn:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+      .cal-btn-outline {
+        background: transparent;
+        border: 1px solid var(--kelp);
+        color: var(--kelp);
+        font-family: var(--mono);
+        font-size: 12px;
+        padding: 8px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .cal-btn-outline:hover {
+        background: var(--kelp-dim);
+        color: var(--foam);
+      }
+      .event-row .station {
+        width: 190px;
+        font-size: 12.5px;
+        color: var(--foam-dim);
+        flex-shrink: 0;
+      }
+      .event-row .height {
+        width: 72px;
+        font-family: var(--mono);
+        font-weight: bold;
+        font-size: 13.5px;
+        flex-shrink: 0;
+      }
+      .ruler {
+        position: relative;
+        width: 150px;
+        height: 10px;
+        background: rgba(244, 241, 232, 0.08);
+        border-radius: 2px;
+        flex-shrink: 0;
+      }
+      .ruler .zero {
+        position: absolute;
+        top: -3px;
+        bottom: -3px;
+        width: 1px;
+        background: var(--sand);
+        opacity: 0.6;
+      }
+      .ruler .dot {
+        position: absolute;
+        top: 50%;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.25);
+      }
+      .tier-tag {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 2px 8px;
+        border-radius: 20px;
+        flex-shrink: 0;
+      }
+      .tier-good {
+        color: var(--amber);
+        border: 1px solid var(--amber);
+      }
+      .tier-prime {
+        color: var(--kelp);
+        border: 1px solid var(--kelp);
+        background: rgba(154, 91, 134, 0.12);
+      }
+      .tier-king {
+        color: var(--ocean);
+        border: 1px solid var(--ocean);
+        background: rgba(63, 126, 166, 0.12);
+      }
+
+      .empty-state {
+        padding: 40px 10px;
+        text-align: center;
+        color: var(--sand);
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 16px;
+      }
+
+      .error-note {
+        color: var(--danger);
+        font-size: 12px;
+        margin-top: 8px;
+      }
+
+      footer {
+        max-width: 1040px;
+        margin: 40px auto 0;
+        padding: 18px 24px 0;
+        border-top: 1px solid var(--panel-line);
+        color: var(--sand);
+        font-size: 11.5px;
+      }
+      footer a {
+        color: var(--sand);
+        text-decoration: underline;
+      }
+
+      @media (max-width: 640px) {
+        .event-row .station {
+          width: 130px;
+        }
+        .ruler {
+          width: 110px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <p class="eyebrow">Oregon Coast &middot; Tide Pooling / Rockhounding / Mussel Harvesting</p>
+      <h1>Tide Planner</h1>
+      <p>
+        Pulls live NOAA predictions for the stations you use, keeps only the tides you want, and lines
+        them up so you can see the best days at a glance. Plan a trip, add to your calendar. Nothing is cached &mdash; run it again anytime for fresh data.
+      </p>
+    </header>
+
+    <main>
+      <div class="panel">
+        <h2>Stations</h2>
+        <div class="stations" id="stationList"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Window</h2>
+        <div class="field-row">
+          <div class="field">
+            <label>From date</label>
+            <input type="date" id="startDate" />
+          </div>
+          <div class="field">
+            <label>To date</label>
+            <input type="date" id="endDate" />
+          </div>
+          <div class="field">
+            <label>Quick range</label>
+            <div class="quickbtns">
+              <button type="button" data-range="30">Next 30 days</button>
+              <button type="button" data-range="60">Next 60 days</button>
+              <button type="button" data-range="90">Next 90 days</button>
+              <button type="button" data-range="year">Rest of this year</button>
+            </div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Earliest time of day</label>
+            <input type="time" id="timeFrom" value="09:00" />
+          </div>
+          <div class="field">
+            <label>Latest time of day</label>
+            <input type="time" id="timeTo" value="19:00" />
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Mode</h2>
+        <div class="mode-toggle" id="modeToggle">
+          <label class="mode-opt checked"
+            ><input type="radio" name="tideMode" value="low" checked /> Low tides
+            <span class="mode-sub">tide pooling / rockhounding / harvesting</span></label
+          >
+          <label class="mode-opt"
+            ><input type="radio" name="tideMode" value="high" /> High tides
+            <span class="mode-sub">king tides / storm watching / when to stay off the rocks</span></label
+          >
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Thresholds</h2>
+        <div class="thresholds">
+          <div class="field">
+            <label
+              ><span class="swatch" style="background: var(--amber)"></span
+              ><span id="goodLabel">Show lows at or below (ft)</span></label
+            >
+            <input type="number" id="goodThresh" value="0.25" step="0.05" />
+          </div>
+          <div class="field">
+            <label
+              ><span class="swatch" id="prime-king" style="background: var(--kelp)"></span
+              ><span id="primeLabel">Highlight prime lows at or below (ft)</span></label
+            >
+            <input type="number" id="primeThresh" value="-0.7" step="0.05" />
+          </div>
+          <div class="field" id="kingRow" style="flex-direction: row; align-items: center; gap: 8px">
+            <input type="checkbox" id="kingToggle" style="accent-color: var(--plum)" />
+            <label style="text-transform: none; letter-spacing: 0; color: var(--foam-dim)"
+              >Also peek at king tides (highs at/above)</label
+            >
+            <input type="number" id="kingThresh" value="8.5" step="0.1" style="width: 70px" />
+          </div>
+        </div>
+        <button class="run-btn" id="runBtn">Load tides</button>
+        <div class="status-line" id="statusLine"></div>
+      </div>
+
+      <div id="output"></div>
+    </main>
+
+    <footer>
+      Like using this app? Consider tipping the developer.<br><a href="https://www.venmo.com/iamearlgrey"><button class="tip-btn">$ TIP JAR $</button></a><BR><br>
+      Predictions from NOAA CO-OPS (public domain), fetched live from your browser for the stations selected above.
+      Heights are MLLW &middot; predictions only, not observed water levels &mdash; wind, swell, and barometric pressure
+      can shift the actual water line. Always check current marine conditions and Oregon Dept. of Fish &amp; Wildlife
+      shellfish/biotoxin closures before harvesting mussels.
+      <a href="https://tidesandcurrents.noaa.gov/" target="_blank">tidesandcurrents.noaa.gov</a>
+    </footer>
+
+    <script>
+      const STATIONS = [
+        { id: "9437815", name: "Brighton, Nehalem River", lat: 45.652, lon: -123.87 },
+        { id: "9437585", name: "North Jetty, Tillamook Bay", lat: 45.57, lon: -123.965 },
+        { id: "9437262", name: "Netarts, Netarts Bay", lat: 45.415, lon: -123.935 },
+        { id: "TWC0857", name: "Nestucca Bay Entrance", lat: 45.167, lon: -123.967 },
+        { id: "9436381", name: "Cascade Head, Salmon River", lat: 45.061, lon: -123.998 },
+        { id: "9435380", name: "Yaquina (South Beach, Newport)", lat: 44.617, lon: -124.049 },
+        { id: "9434939", name: "Waldport, Alsea Bay", lat: 44.425, lon: -124.075 },
+        { id: "9434132", name: "Siuslaw River Entrance", lat: 44.016, lon: -124.13 },
+        { id: "9431647", name: "Port Orford", lat: 42.739, lon: -124.498 },
+        { id: "9419750", name: "Crescent City, CA", lat: 41.745, lon: -124.202 }
+      ];
+
+      const stationListEl = document.getElementById("stationList");
+      STATIONS.forEach((st) => {
+        const label = document.createElement("label");
+        label.className = "station-chip checked";
+        label.innerHTML = `<input type="checkbox" checked data-id="${st.id}"> ${st.name}`;
+        label.querySelector("input").addEventListener("change", (e) => {
+          label.classList.toggle("checked", e.target.checked);
+        });
+        stationListEl.appendChild(label);
+      });
+
+      function pad(n) {
+        return n.toString().padStart(2, "0");
+      }
+      function fmtDate(d) {
+        return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+      }
+      function toYYYYMMDD(dateStr) {
+        return dateStr.replaceAll("-", "");
+      }
+
+      const today = new Date();
+      document.getElementById("startDate").value = fmtDate(today);
+      const dec31 = new Date(today.getFullYear(), 11, 31);
+      document.getElementById("endDate").value = fmtDate(
+        dec31 > today ? dec31 : new Date(today.getFullYear() + 1, 11, 31)
+      );
+
+      document.querySelectorAll(".quickbtns button").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const r = btn.dataset.range;
+          const start = new Date();
+          document.getElementById("startDate").value = fmtDate(start);
+          let end;
+          if (r === "year") {
+            end = new Date(start.getFullYear(), 11, 31);
+            if (end < start) end = new Date(start.getFullYear() + 1, 11, 31);
+          } else {
+            end = new Date(start.getTime() + parseInt(r) * 86400000);
+          }
+          document.getElementById("endDate").value = fmtDate(end);
+        });
+      });
+
+      // ---------- Low/high tide mode toggle ----------
+      document.querySelectorAll('input[name="tideMode"]').forEach((radio) => {
+        radio.addEventListener("change", () => {
+          document
+            .querySelectorAll(".mode-opt")
+            .forEach((o) => o.classList.toggle("checked", o.querySelector("input").checked));
+          const mode = document.querySelector('input[name="tideMode"]:checked').value;
+          const goodEl = document.getElementById("goodThresh");
+          const primeEl = document.getElementById("primeThresh");
+          if (mode === "high") {
+            document.getElementById("goodLabel").textContent = "Show highs at or above (ft)";
+            document.getElementById("primeLabel").textContent = "Highlight king tides at or above (ft)";
+            document.getElementById("prime-king").style.background = "var(--ocean)";
+            goodEl.value = "7.5";
+            primeEl.value = "8.5";
+            document.getElementById("kingRow").style.display = "none";
+          } else {
+            document.getElementById("goodLabel").textContent = "Show lows at or below (ft)";
+            document.getElementById("primeLabel").textContent = "Highlight prime lows at or below (ft)";
+            document.getElementById("prime-king").style.background = "var(--kelp)";
+            goodEl.value = "0.25";
+            primeEl.value = "-0.7";
+            document.getElementById("kingRow").style.display = "";
+          }
+        });
+      });
+
+      // ---------- Sunrise / sunset (offline solar calc, no external API / no rate limits) ----------
+      function getPacificOffsetHours(y, m, d) {
+        // m is 1-indexed month here
+        const probeUTC = new Date(Date.UTC(y, m - 1, d, 20, 0, 0)); // ~mid-afternoon PT, safely inside the correct calendar day
+        const parts = new Intl.DateTimeFormat("en-US", {
+          timeZone: "America/Los_Angeles",
+          timeZoneName: "short",
+          hour: "2-digit"
+        }).formatToParts(probeUTC);
+        const tzName = (parts.find((p) => p.type === "timeZoneName") || {}).value || "PST";
+        return tzName.indexOf("D") !== -1 ? -7 : -8; // PDT vs PST
+      }
+
+      function sunUTCHour(y, m, d, lat, lon, isSunrise) {
+        const rad = Math.PI / 180;
+        const dayOfYear = Math.floor((Date.UTC(y, m - 1, d) - Date.UTC(y, 0, 1)) / 86400000) + 1;
+        const zenith = 90.833;
+        const lngHour = lon / 15;
+        const t = isSunrise ? dayOfYear + (6 - lngHour) / 24 : dayOfYear + (18 - lngHour) / 24;
+        const M = 0.9856 * t - 3.289;
+        let L = M + 1.916 * Math.sin(M * rad) + 0.02 * Math.sin(2 * M * rad) + 282.634;
+        L = (L + 360) % 360;
+        let RA = (1 / rad) * Math.atan(0.91764 * Math.tan(L * rad));
+        RA = (RA + 360) % 360;
+        const Lq = Math.floor(L / 90) * 90,
+          RAq = Math.floor(RA / 90) * 90;
+        RA = (RA + (Lq - RAq)) / 15;
+        const sinDec = 0.39782 * Math.sin(L * rad);
+        const cosDec = Math.cos(Math.asin(sinDec));
+        const cosH = (Math.cos(zenith * rad) - sinDec * Math.sin(lat * rad)) / (cosDec * Math.cos(lat * rad));
+        if (cosH > 1 || cosH < -1) return null; // polar day/night edge case, won't hit at OR/CA latitudes
+        let H = isSunrise ? 360 - (1 / rad) * Math.acos(cosH) : (1 / rad) * Math.acos(cosH);
+        H = H / 15;
+        const T = H + RA - 0.06571 * t - 6.622;
+        return (T - lngHour + 24) % 24; // UTC decimal hour
+      }
+
+      function sunTimesLocal(dateStr, lat, lon) {
+        // dateStr "YYYY-MM-DD" -> {riseStr, setStr, riseMin, setMin} in Pacific local time, HH:MM 24h minutes-of-day
+        const [y, m, d] = dateStr.split("-").map(Number);
+        const offset = getPacificOffsetHours(y, m, d);
+        const riseUTC = sunUTCHour(y, m, d, lat, lon, true);
+        const setUTC = sunUTCHour(y, m, d, lat, lon, false);
+        function toLocal(utcHour) {
+          if (utcHour === null) return null;
+          let h = utcHour + offset;
+          h = ((h % 24) + 24) % 24;
+          const hh = Math.floor(h);
+          const mm = Math.round((h - hh) * 60);
+          return { hh, mm: mm === 60 ? 0 : mm, totalMin: hh * 60 + (mm === 60 ? 0 : mm) };
+        }
+        const rise = toLocal(riseUTC);
+        const set = toLocal(setUTC);
+        function fmt(o) {
+          if (!o) return "—";
+          const h12 = ((o.hh + 11) % 12) + 1;
+          const ampm = o.hh < 12 ? "AM" : "PM";
+          return `${h12}:${o.mm.toString().padStart(2, "0")} ${ampm}`;
+        }
+        return {
+          riseStr: fmt(rise),
+          setStr: fmt(set),
+          riseMin: rise ? rise.totalMin : null,
+          setMin: set ? set.totalMin : null
+        };
+      }
+
+      // ---------- Add to Calendar (.ics generation, fully client-side) ----------
+      function icsEscape(s) {
+        return String(s)
+          .replace(/\\/g, "\\\\")
+          .replace(/([,;])/g, "\\$1")
+          .replace(/\n/g, "\\n");
+      }
+      function pad2(n) {
+        return n.toString().padStart(2, "0");
+      }
+      function localToUTCDate(dateStr, timeStr) {
+        const [y, m, d] = dateStr.split("-").map(Number);
+        const [hh, mm] = timeStr.split(":").map(Number);
+        const offset = getPacificOffsetHours(y, m, d); // -7 (PDT) or -8 (PST)
+        const dt = new Date(Date.UTC(y, m - 1, d, hh, mm, 0));
+        dt.setUTCHours(dt.getUTCHours() - offset); // local = UTC + offset  =>  UTC = local - offset
+        return dt;
+      }
+      function formatICSUTC(d) {
+        return (
+          d.getUTCFullYear() +
+          pad2(d.getUTCMonth() + 1) +
+          pad2(d.getUTCDate()) +
+          "T" +
+          pad2(d.getUTCHours()) +
+          pad2(d.getUTCMinutes()) +
+          "00Z"
+        );
+      }
+      function buildICS(events, modeWord) {
+        let ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Oregon Coast Tide Planner//EN\r\nCALSCALE:GREGORIAN\r\n";
+        const stamp = formatICSUTC(new Date());
+        events.forEach((e, i) => {
+          const center = localToUTCDate(e.date, e.time);
+          const start = new Date(center.getTime() - 60 * 60000); // 1hr before predicted tide
+          const end = new Date(center.getTime() + 60 * 60000); // 1hr after
+          const uid = `tide-${e.date.replace(/-/g, "")}-${e.time.replace(":", "")}-${e.station.replace(/[^a-z0-9]/gi, "")}-${i}@oregontideplanner`;
+          ics += "BEGIN:VEVENT\r\n";
+          ics += `UID:${uid}\r\n`;
+          ics += `DTSTAMP:${stamp}\r\n`;
+          ics += `DTSTART:${formatICSUTC(start)}\r\n`;
+          ics += `DTEND:${formatICSUTC(end)}\r\n`;
+          ics += `SUMMARY:${icsEscape(e.height.toFixed(2) + " ft " + modeWord + " tide — " + e.station)}\r\n`;
+          ics += `DESCRIPTION:${icsEscape("Predicted " + modeWord + " tide of " + e.height.toFixed(2) + " ft at " + e.time + " (NOAA prediction, not observed water level). Sunrise " + e.sunrise + ", sunset " + e.sunset + ".")}\r\n`;
+          ics += `LOCATION:${icsEscape(e.station + ", Oregon Coast")}\r\n`;
+          ics += "END:VEVENT\r\n";
+        });
+        ics += "END:VCALENDAR\r\n";
+        return ics;
+      }
+      function downloadICS(ics, filename) {
+        const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+      }
+
+      function heightColor(v, goodT, primeT, mode) {
+        const primeColor = getComputedStyle(document.documentElement)
+          .getPropertyValue(mode === "high" ? "--ocean" : "--kelp")
+          .trim();
+        const amber = getComputedStyle(document.documentElement).getPropertyValue("--amber").trim();
+        const dim = getComputedStyle(document.documentElement).getPropertyValue("--foam-dim").trim();
+        if (mode === "high") {
+          if (v >= primeT) return primeColor;
+          if (v >= goodT) return amber;
+          return dim;
+        }
+        if (v <= primeT) return primeColor;
+        if (v <= goodT) return amber;
+        return dim;
+      }
+
+      function rulerHTML(v, color) {
+        // scale -2 to 9 ft across the ruler width
+        const min = -2,
+          max = 9;
+        const pct = Math.max(0, Math.min(100, ((v - min) / (max - min)) * 100));
+        const zeroPct = ((0 - min) / (max - min)) * 100;
+        return `<div class="ruler"><div class="zero" style="left:${zeroPct}%"></div><div class="dot" style="left:${pct}%; background:${color}"></div></div>`;
+      }
+
+      async function fetchStationPredictions(stationId, beginYYYYMMDD, endYYYYMMDD) {
+        const url = `https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?begin_date=${beginYYYYMMDD}&end_date=${endYYYYMMDD}&station=${stationId}&product=predictions&datum=MLLW&time_zone=lst_ldt&interval=hilo&units=english&application=oregon_tide_planner&format=json`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message || "NOAA error");
+        return data.predictions || [];
+      }
+
+      document.getElementById("runBtn").addEventListener("click", runPlanner);
+
+      // ---------- Delegated handlers for calendar controls (output re-renders each run) ----------
+      const outputEl = document.getElementById("output");
+
+      function updateSelCount() {
+        const n = window.selectedIdxs ? window.selectedIdxs.size : 0;
+        const countEl = document.getElementById("selCount");
+        const btn = document.getElementById("addSelectedBtn");
+        if (countEl) countEl.textContent = n + (n === 1 ? " selected" : " selected");
+        if (btn) btn.disabled = n === 0;
+      }
+
+      outputEl.addEventListener("change", (e) => {
+        if (e.target.classList.contains("row-check")) {
+          const idx = parseInt(e.target.dataset.idx, 10);
+          if (e.target.checked) window.selectedIdxs.add(idx);
+          else window.selectedIdxs.delete(idx);
+          updateSelCount();
+        }
+        if (e.target.id === "selectAllBox") {
+          const checked = e.target.checked;
+          document.querySelectorAll(".row-check").forEach((cb) => {
+            cb.checked = checked;
+            const idx = parseInt(cb.dataset.idx, 10);
+            if (checked) window.selectedIdxs.add(idx);
+            else window.selectedIdxs.delete(idx);
+          });
+          updateSelCount();
+        }
+      });
+
+      outputEl.addEventListener("click", (e) => {
+        if (e.target.classList.contains("add-single-btn")) {
+          const idx = parseInt(e.target.dataset.idx, 10);
+          const evt = window.currentEvents.find((x) => x.idx === idx);
+          if (evt) {
+            const ics = buildICS([evt], window.currentModeWord);
+            downloadICS(ics, `tide-${evt.date}-${evt.station.replace(/[^a-z0-9]/gi, "-")}.ics`);
+          }
+        }
+        if (e.target.id === "addAllBtn") {
+          const ics = buildICS(window.currentEvents, window.currentModeWord);
+          downloadICS(ics, `oregon-coast-${window.currentModeWord}-tides.ics`);
+        }
+        if (e.target.id === "addSelectedBtn") {
+          const chosen = window.currentEvents.filter((x) => window.selectedIdxs.has(x.idx));
+          if (chosen.length) {
+            const ics = buildICS(chosen, window.currentModeWord);
+            downloadICS(ics, `oregon-coast-${window.currentModeWord}-tides-selected.ics`);
+          }
+        }
+      });
+
+      async function runPlanner() {
+        const btn = document.getElementById("runBtn");
+        const statusLine = document.getElementById("statusLine");
+        const output = document.getElementById("output");
+        btn.disabled = true;
+        output.innerHTML = "";
+        statusLine.textContent = "Fetching predictions from NOAA…";
+
+        const selected = Array.from(document.querySelectorAll(".station-chip input:checked")).map(
+          (el) => el.dataset.id
+        );
+        if (selected.length === 0) {
+          statusLine.textContent = "Pick at least one station.";
+          btn.disabled = false;
+          return;
+        }
+
+        const mode = document.querySelector('input[name="tideMode"]:checked').value;
+        const begin = toYYYYMMDD(document.getElementById("startDate").value);
+        const end = toYYYYMMDD(document.getElementById("endDate").value);
+        const timeFrom = document.getElementById("timeFrom").value; // "09:00"
+        const timeTo = document.getElementById("timeTo").value;
+        const goodT = parseFloat(document.getElementById("goodThresh").value);
+        const primeT = parseFloat(document.getElementById("primeThresh").value);
+        const kingOn = document.getElementById("kingToggle").checked;
+        const kingT = parseFloat(document.getElementById("kingThresh").value);
+
+        const allLows = [];
+        const allHighs = [];
+        const errors = [];
+        let done = 0;
+
+        await Promise.all(
+          STATIONS.filter((s) => selected.includes(s.id)).map(async (st) => {
+            try {
+              const preds = await fetchStationPredictions(st.id, begin, end);
+              preds.forEach((p) => {
+                const v = parseFloat(p.v);
+                const [datePart, timePart] = p.t.split(" ");
+                const evt = { station: st.name, lat: st.lat, lon: st.lon, date: datePart, time: timePart, height: v };
+                if (p.type === "L") allLows.push(evt);
+                if (p.type === "H") allHighs.push(evt);
+              });
+            } catch (e) {
+              errors.push(st.name);
+            }
+            done++;
+            statusLine.textContent = `Fetched ${done} of ${selected.length} stations…`;
+          })
+        );
+
+        btn.disabled = false;
+
+        const modeWord = mode === "high" ? "high" : "low";
+        if (errors.length) {
+          statusLine.innerHTML = `Loaded ${selected.length - errors.length} of ${selected.length} stations. <span class="error-note">Could not reach: ${errors.join(", ")}. Try again, or check the station directly on tidesandcurrents.noaa.gov.</span>`;
+        } else {
+          statusLine.textContent = `Loaded ${selected.length} station${selected.length > 1 ? "s" : ""} · ${(mode === "high" ? allHighs : allLows).length} total ${modeWord}-tide events in range.`;
+        }
+
+        // filter by mode direction + time window + threshold
+        const sourceEvents = mode === "high" ? allHighs : allLows;
+        const filteredEvents = sourceEvents
+          .filter((e) => {
+            if (e.time < timeFrom || e.time > timeTo) return false;
+            return mode === "high" ? e.height >= goodT : e.height <= goodT;
+          })
+          .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+        filteredEvents.forEach((e, i) => {
+          e.idx = i;
+        });
+
+        // attach sun times per event (per station+date, since latitude varies Astoria-to-Crescent-City)
+        const sunCache = {};
+        filteredEvents.forEach((e) => {
+          const key = e.date + "|" + e.lat;
+          if (!sunCache[key]) sunCache[key] = sunTimesLocal(e.date, e.lat, e.lon);
+          const sun = sunCache[key];
+          e.sunrise = sun.riseStr;
+          e.sunset = sun.setStr;
+          const [hh, mm] = e.time.split(":").map(Number);
+          const evtMin = hh * 60 + mm;
+          e.beforeSunrise = sun.riseMin !== null && evtMin < sun.riseMin;
+          e.afterSunset = sun.setMin !== null && evtMin > sun.setMin;
+        });
+
+        // group by date
+        const groups = {};
+        filteredEvents.forEach((e) => {
+          if (!groups[e.date]) groups[e.date] = [];
+          groups[e.date].push(e);
+        });
+        const dateKeys = Object.keys(groups).sort();
+
+        // summary stats
+        const primeCount =
+          mode === "high"
+            ? filteredEvents.filter((e) => e.height >= primeT).length
+            : filteredEvents.filter((e) => e.height <= primeT).length;
+        let best = null;
+        filteredEvents.forEach((e) => {
+          if (!best) {
+            best = e;
+            return;
+          }
+          if (mode === "high" ? e.height > best.height : e.height < best.height) best = e;
+        });
+
+        let html = "";
+
+        const primeTierWord = mode === "high" ? "King" : "Prime";
+        html += `<div class="summary">
+    <div class="cell"><div class="num">${dateKeys.length}</div><div class="lbl">Qualifying days</div></div>
+    <div class="cell"><div class="num">${filteredEvents.length}</div><div class="lbl">${mode === "high" ? "High" : "Low"} tide windows</div></div>
+    <div class="cell"><div class="num">${primeCount}</div><div class="lbl">${primeTierWord} (${mode === "high" ? "&ge;" : "&le;"} ${primeT} ft)</div></div>
+    <div class="cell"><div class="num">${best ? best.height.toFixed(2) + " ft" : "—"}</div><div class="lbl">${best ? (mode === "high" ? "Highest — " : "Lowest — ") + best.date + " " + best.time + " · " + best.station : mode === "high" ? "Best high tide" : "Best low tide"}</div></div>
+  </div>`;
+
+        window.currentEvents = filteredEvents;
+        window.currentModeWord = modeWord;
+        window.selectedIdxs = new Set();
+
+        if (filteredEvents.length) {
+          html += `<div class="cal-bar">
+      <label class="cal-selall"><input type="checkbox" id="selectAllBox"> select all shown</label>
+      <span id="selCount" class="cal-count">0 selected</span>
+      <button id="addSelectedBtn" class="cal-btn" disabled>Add selected to calendar</button>
+      <button id="addAllBtn" class="cal-btn-outline">Add all ${filteredEvents.length} to calendar</button>
+    </div>`;
+        }
+
+        if (kingOn && mode === "low") {
+          const kings = allHighs
+            .filter((e) => e.height >= kingT)
+            .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+          html += `<details class="kingtide-wrap" ${kings.length ? "" : "open"}>
+      <summary>King tides (&ge; ${kingT} ft) — good markers for rockhounding once the surge recedes ${kings.length ? "(" + kings.length + ")" : ""}</summary>
+      <div class="kingtide-list">`;
+          if (kings.length === 0) {
+            html += `<div class="empty-state" style="padding:12px 0;font-size:13px;">None in this range at that threshold.</div>`;
+          } else {
+            kings.forEach((k) => {
+              html += `<div class="kt-row"><span>${k.date}</span><span>${k.time}</span><span class="kt-h">${k.height.toFixed(2)} ft</span><span>${k.station}</span></div>`;
+            });
+          }
+          html += `</div></details>`;
+        }
+
+        html += '<div class="ledger">';
+        if (dateKeys.length === 0) {
+          html += `<div class="empty-state">No ${modeWord} tides in this window meet your threshold.<br>Try loosening the height or time filters.</div>`;
+        } else {
+          dateKeys.forEach((dk) => {
+            const d = new Date(dk + "T00:00:00");
+            const dowLong = d.toLocaleDateString("en-US", { weekday: "long" });
+            const monthDay = d.toLocaleDateString("en-US", { month: "long", day: "numeric" });
+            const dayEvents = groups[dk].sort((a, b) => a.time.localeCompare(b.time));
+            // sunrise/sunset range for the day across whichever stations have events (usually near-identical, can differ a few min N to S)
+            const rises = [...new Set(dayEvents.map((e) => e.sunrise))];
+            const sets = [...new Set(dayEvents.map((e) => e.sunset))];
+            const sunLine = `Sunrise ${rises.length > 1 ? rises[0] + "–" + rises[rises.length - 1] : rises[0]} &middot; Sunset ${sets.length > 1 ? sets[0] + "–" + sets[sets.length - 1] : sets[0]}`;
+
+            html += `<div class="day-group"><div class="day-head"><span class="date-big">${dowLong}</span><span class="date-sub">${monthDay}</span></div>
+        <div class="sun-line">${sunLine}</div>`;
+            dayEvents.forEach((e) => {
+              const color = heightColor(e.height, goodT, primeT, mode);
+              const topTier = mode === "high" ? "king" : "prime";
+              const tier =
+                mode === "high" ? (e.height >= primeT ? topTier : "good") : e.height <= primeT ? topTier : "good";
+              const tierLabel = tier === topTier ? primeTierWord : "Good";
+              const dark = e.beforeSunrise ? "before sunrise" : e.afterSunset ? "after sunset" : null;
+              html += `<div class="event-row">
+          <input type="checkbox" class="row-check" data-idx="${e.idx}">
+          <span class="time">${e.time}</span>
+          <span class="station">${e.station}</span>
+          <span class="height" style="color:${color}">${e.height.toFixed(2)} ft</span>
+          ${rulerHTML(e.height, color)}
+          <span class="tier-tag tier-${tier}">${tierLabel}</span>
+          ${dark ? `<span class="dark-tag">&#9789; ${dark}</span>` : ""}
+          <button class="add-single-btn" data-idx="${e.idx}" title="Add this tide to your calendar">+ Cal</button>
+        </div>`;
+            });
+            html += `</div>`;
+          });
+        }
+        html += "</div>";
+
+        output.innerHTML = html;
+      }
+
+      // auto-run on load
+      runPlanner();
+    </script>
+  </body>
+</html>
