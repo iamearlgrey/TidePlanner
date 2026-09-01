@@ -69,11 +69,15 @@
       }
 
       /* ---------- Header ---------- */
-      header {
-        padding: 38px 24px 26px;
-        border-bottom: 1px solid var(--panel-line);
-        background: linear-gradient(180deg, rgba(0, 0, 0, 0.15), transparent);
-      }
+header{
+  padding:38px 24px 26px;
+  border-bottom:1px solid var(--panel-line);
+  background:linear-gradient(180deg, rgba(0,0,0,0.15), transparent);
+}
+header .header-inner{
+  max-width:1040px;
+  margin:0 auto;
+}
       .eyebrow {
         font-family: var(--mono);
         text-transform: uppercase;
@@ -588,12 +592,14 @@
   </head>
   <body>
     <header>
+      <div class="header-inner">
       <p class="eyebrow">Oregon Coast &middot; Tide Pooling / Rockhounding / Mussel Harvesting</p>
       <h1>Tide Planner</h1>
       <p>
         Pulls live NOAA predictions for the stations you use, keeps only the tides you want, and lines
         them up so you can see the best days at a glance. Plan a trip, add to your calendar. Nothing is cached &mdash; run it again anytime for fresh data.
       </p>
+      </div>
     </header>
 
     <main>
@@ -695,7 +701,7 @@
 
     <script>
       const STATIONS = [
-        { id:'9439040', name:'Astoria, Columbia River', lat:45.124, lon:-123.461},
+        { id: "9439040", name: "Astoria, Columbia River", lat:45.124, lon:-123.461},
         { id: "9437815", name: "Brighton, Nehalem River", lat: 45.652, lon: -123.87 },
         { id: "9437585", name: "North Jetty, Tillamook Bay", lat: 45.57, lon: -123.965 },
         { id: "9437262", name: "Netarts, Netarts Bay", lat: 45.415, lon: -123.935 },
