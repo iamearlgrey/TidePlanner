@@ -78,13 +78,14 @@
 
       /* ---------- Header ---------- */
 header{
-  padding:38px 24px 26px;
+  padding:38px 0px 26px;
   border-bottom:1px solid var(--panel-line);
   background:linear-gradient(180deg, rgba(0,0,0,0.15), transparent);
 }
 header .header-inner{
   max-width:1040px;
   margin:0 auto;
+  padding:0 24px;
 }
       .eyebrow {
         font-family: var(--mono);
@@ -94,6 +95,81 @@ header .header-inner{
         color: var(--kelp);
         margin: 0 0 10px;
       }
+      .header-top{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:16px;
+      }
+      .about-btn{
+        background:transparent;
+        border:1px solid var(--panel-line);
+        color:var(--foam-dim);
+        font-family:var(--mono);
+        font-size:11px;
+        padding:5px 11px;
+        border-radius:20px;
+        cursor:pointer;
+        flex-shrink:0;
+        white-space:nowrap;
+      }
+      .about-btn:hover{border-color:var(--kelp);color:var(--foam);}
+      .modal-overlay{
+        position:fixed;
+        inset:0;
+        background:rgba(4,14,16,0.72);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:20px;
+        z-index:100;
+      }
+      .modal-overlay[hidden]{display:none;}
+      .modal{
+        position:relative;
+        max-width:520px;
+        width:100%;
+        max-height:82vh;
+        overflow-y:auto;
+        background:var(--panel);
+        border:1px solid var(--panel-line);
+        border-radius:4px;
+        padding:28px 26px 24px;
+      }
+      .modal-title{
+        font-family:var(--serif);
+        font-weight:400;
+        font-size:26px;
+        letter-spacing:1px;
+        margin:0 0 14px;
+        color:var(--foam);
+      }
+      .modal-body p{
+        color:var(--foam-dim);
+        font-size:13px;
+        line-height:1.6;
+        margin:0 0 12px;
+      }
+      .modal-note{
+        color:var(--sand) !important;
+        font-size:11.5px !important;
+        border-top:1px solid var(--panel-line);
+        padding-top:12px;
+        margin-top:16px !important;
+      }
+      .modal-close{
+        position:absolute;
+        top:14px;
+        right:14px;
+        background:transparent;
+        border:none;
+        color:var(--sand);
+        font-size:26px;
+        line-height:1;
+        cursor:pointer;
+        padding:4px 8px;
+      }
+      .modal-close:hover{color:var(--foam);}
       h1 {
         font-family: var(--serif);
         font-weight: 400;
@@ -563,6 +639,19 @@ header .header-inner{
         letter-spacing: 1px;
         font-size: 16px;
       }
+      .fallback-ledger{
+        margin-top:8px;
+      }
+      .fallback-ledger .day-group{
+        padding:12px 0;
+      }
+      .fallback-row{
+        opacity:0.75;
+      }
+      .fallback-row .height{
+        color:var(--foam-dim);
+        font-weight:normal;
+      }
 
       .error-note {
         color: var(--danger);
@@ -601,7 +690,10 @@ header .header-inner{
   <body>
     <header>
       <div class="header-inner">
-      <p class="eyebrow">Oregon Coast &middot; Tide Pooling / Rockhounding / Mussel Harvesting</p>
+      <div class="header-top">
+        <p class="eyebrow">Oregon Coast &middot; Tide Pooling / Rockhounding / Mussel Harvesting</p>
+        <button class="about-btn" id="aboutBtn" aria-haspopup="dialog" aria-controls="aboutModal" title="About this tool">&#9432; About</button>
+      </div>
       <h1>Tide Planner</h1>
       <p>
         The Oregon Coast from Long Beach, Washington to Crescent City, California. Pulls live NOAA predictions for the stations you use, keeps only the tides you want, and lines
@@ -609,6 +701,20 @@ header .header-inner{
       </p>
       </div>
     </header>
+
+    <div class="modal-overlay" id="aboutOverlay" hidden>
+      <div class="modal" id="aboutModal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+        <button class="modal-close" id="aboutClose" aria-label="Close">&times;</button>
+        <p class="eyebrow">About this tool</p>
+        <h2 id="aboutTitle" class="modal-title">Why this exists</h2>
+        <div class="modal-body">
+          <p>I got tired of reading tide tables — rows of numbers with no way to tell, at a glance, which days were actually worth a drive to the coast. I built this for myself, to plan tidepooling, rockhounding, and mussel harvesting trips around daylight low tides instead of squinting at a chart every time.</p>
+          <p>It pulls live predictions straight from NOAA whenever you load it — nothing's pre-baked or cached — and everything runs in your browser. No account, no tracking, no server of mine sitting in the middle.</p>
+          <p>It's a personal project, not an official product. If you find it useful and want to say thanks, there's a tip jar in the footer — entirely optional, always will be.</p>
+          <p class="modal-note">Predictions only, not observed water levels. Always check current marine conditions and Oregon Dept. of Fish &amp; Wildlife shellfish/biotoxin closures before harvesting. Not affiliated with NOAA.</p>
+        </div>
+      </div>
+    </div>
 
     <main>
       <div class="panel">
@@ -725,6 +831,22 @@ header .header-inner{
       ];
 
       const stationListEl = document.getElementById("stationList");
+
+      // ---------- About modal ----------
+      const aboutOverlay = document.getElementById("aboutOverlay");
+      document.getElementById("aboutBtn").addEventListener("click", () => {
+        aboutOverlay.hidden = false;
+      });
+      document.getElementById("aboutClose").addEventListener("click", () => {
+        aboutOverlay.hidden = true;
+      });
+      aboutOverlay.addEventListener("click", (e) => {
+        if (e.target === aboutOverlay) aboutOverlay.hidden = true;
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && !aboutOverlay.hidden) aboutOverlay.hidden = true;
+      });
+
       STATIONS.forEach((st) => {
         const label = document.createElement("label");
         label.className = "station-chip checked";
@@ -1162,7 +1284,43 @@ header .header-inner{
 
         html += '<div class="ledger">';
         if (dateKeys.length === 0) {
-          html += `<div class="empty-state">No ${modeWord} tides in this window meet your threshold.<br>Try loosening the height or time filters.</div>`;
+          html += `<div class="empty-state">No ${modeWord} tides in this window meet your threshold.<br>Here's what the ${modeWord} tide is actually doing on those days instead:</div>`;
+
+          // Fallback: for every date in the requested range, show the actual event(s)
+          // for the selected stations, ignoring the height threshold and time-of-day window.
+          const rangeDates = [];
+          const by = begin.slice(0, 4), bm = begin.slice(4, 6), bd = begin.slice(6, 8);
+          const ey = end.slice(0, 4), em = end.slice(4, 6), ed = end.slice(6, 8);
+          let cur = new Date(Number(by), Number(bm) - 1, Number(bd));
+          const endD = new Date(Number(ey), Number(em) - 1, Number(ed));
+          while (cur <= endD) {
+            rangeDates.push(fmtDate(cur));
+            cur.setDate(cur.getDate() + 1);
+          }
+          const fallbackGroups = {};
+          sourceEvents.forEach((e) => {
+            if (!fallbackGroups[e.date]) fallbackGroups[e.date] = [];
+            fallbackGroups[e.date].push(e);
+          });
+
+          html += '<div class="ledger fallback-ledger">';
+          rangeDates.forEach((dk) => {
+            const dayList = (fallbackGroups[dk] || []).sort((a, b) => a.time.localeCompare(b.time));
+            if (!dayList.length) return;
+            const d = new Date(dk + "T00:00:00");
+            const dowLong = d.toLocaleDateString("en-US", { weekday: "long" });
+            const monthDay = d.toLocaleDateString("en-US", { month: "long", day: "numeric" });
+            html += `<div class="day-group"><div class="day-head"><span class="date-big">${dowLong}</span><span class="date-sub">${monthDay}</span></div>`;
+            dayList.forEach((e) => {
+              html += `<div class="event-row fallback-row">
+          <span class="time">${e.time}</span>
+          <span class="station">${e.station}</span>
+          <span class="height">${e.height.toFixed(2)} ft</span>
+        </div>`;
+            });
+            html += `</div>`;
+          });
+          html += "</div>";
         } else {
           dateKeys.forEach((dk) => {
             const d = new Date(dk + "T00:00:00");
