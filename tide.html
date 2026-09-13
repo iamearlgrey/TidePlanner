@@ -5,16 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Current Tide</title>
     <style>
+            @font-face {
+        font-family: "SF Mono";
+        src: url("fonts/SFMono-Regular.ttf");
+      }
+      
       :root {
         --deep: #07222e;
         --mid: #0e3d52;
         --bright: #00b3ff;
         --foam: #eaf6fb;
-        --slate: #8fb8c9;
+        --slate: #69cef7;
         --sun: #ffe500;
         --rise: #0bdf9f;
-        --fall: #ff9e80;
+        --fall: #d04a1e;
         --card: rgba(255, 255, 255, 0.07);
+/*
+                --card: rgba(255, 255, 255, 0.07);
+*/
+
         --card-border: rgba(255, 255, 255, 0.14);
                 --mono: "SF Mono", ui-monospace, monospace;
         
@@ -27,13 +36,13 @@
         margin: 0;
         padding: 0;
         height: 100%;
-        font-family: /*var(--mono);*/
-          "Inter",
+        font-family: var(--mono);
+/*          "Inter",
           -apple-system,
           BlinkMacSystemFont,
-          "Segoe UI",
+          "Segoe UI",*/
           sans-serif;
-        background: radial-gradient(120% 90% at 50% -10%, var(--bright) 0%, var(--mid) 45%, var(--deep) 100%);
+        background: radial-gradient(120% 90% at 50% -10%, var(--bright) 0%, var(--mid) 60%, var(--deep) 100%);
         color: var(--foam);
         overflow-x: hidden;
       }
@@ -84,7 +93,7 @@
       .chart-wrap {
         position: relative;
         background: var(--card);
-        border: 1px solid var(--card-border);
+        /*border: 1px solid var(--card-border);*/
         border-radius: 22px;
         padding: 18px 6px 10px;
         backdrop-filter: blur(6px);
@@ -98,12 +107,13 @@
       .day-tag {
         position: absolute;
         top: 8px;
-        font-size: 10px;
+        font-size: 12px;
         letter-spacing: 0.08em;
+        font-weight: 900;
         color: var(--slate);
       }
       .axis-label {
-        font-size: 10.5px;
+        font-size: 12px;
         fill: var(--slate);
       }
       .grid-line {
@@ -139,12 +149,12 @@
         stroke-width: 1.5;
       }
       .extreme-label {
-        font-size: 11px;
+        font-size: 15px;
         font-weight: 600;
         fill: var(--foam);
       }
       .extreme-sub {
-        font-size: 9.5px;
+        font-size: 11px;
         fill: var(--slate);
       }
       .sun-dot {
@@ -155,14 +165,15 @@
 
       /* ---------- status card ---------- */
       .status-card {
-        background: var(--card);
-        border: 1px solid var(--card-border);
+        background: var(--mid);
+        /*border: 1px solid var(--card-border);*/
         border-radius: 22px;
         padding: 18px 20px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         backdrop-filter: blur(6px);
+        /*box-shadow: inset 0 0 20px 5px rgba(0, 0, 0, 0.1);*/
       }
       .status-left .status-title {
         font-size: 14px;
@@ -327,8 +338,8 @@
           <svg id="chart" viewBox="0 0 400 210" preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="waveGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#EAF6FB" stop-opacity="0.30" />
-                <stop offset="100%" stop-color="#EAF6FB" stop-opacity="0.02" />
+                <stop offset="0%" stop-color="#0e3d52" stop-opacity="1" />
+                <stop offset="100%" stop-color="#0e3d52" stop-opacity="0.00" />
               </linearGradient>
             </defs>
             <g id="gridLayer"></g>
@@ -770,7 +781,7 @@
                 x1: x.toFixed(2),
                 y1: PAD_TOP,
                 x2: x.toFixed(2),
-                y2: VB_H - PAD_BOTTOM + 6
+                y2: VB_H - PAD_BOTTOM + 20
               })
             );
             const { main, ap } = fmtClockShort(t);
@@ -778,7 +789,7 @@
             const txt = svgEl("text", {
               class: "axis-label",
               x: x.toFixed(2),
-              y: VB_H - PAD_BOTTOM + 22,
+              y: VB_H - PAD_BOTTOM + 32,
               "text-anchor": "middle"
             });
             txt.textContent = label;
@@ -799,7 +810,7 @@
           const waveLayer = $("waveLayer");
           waveLayer.innerHTML = "";
           const linePath = smoothPath(points);
-          const fillPath = `${linePath} L ${points[points.length - 1].x.toFixed(2)} ${VB_H - PAD_BOTTOM} L ${points[0].x.toFixed(2)} ${VB_H - PAD_BOTTOM} Z`;
+          const fillPath = `${linePath} L ${points[points.length - 1].x.toFixed(2)} ${VB_H - PAD_BOTTOM + 20} L ${points[0].x.toFixed(2)} ${VB_H - PAD_BOTTOM + 20} Z`;
           waveLayer.appendChild(svgEl("path", { class: "wave-fill", d: fillPath }));
           waveLayer.appendChild(svgEl("path", { class: "wave-line", d: linePath }));
 
@@ -826,7 +837,7 @@
               svgEl("circle", { class: "extreme-dot", cx: x.toFixed(2), cy: y.toFixed(2), r: 4 })
             );
             const isHigh = ex.type === "H";
-            const labelY = isHigh ? y - 22 : y + 28;
+            const labelY = isHigh ? y - 28 : y + 24;
             const t1 = svgEl("text", {
               class: "extreme-label",
               x: x.toFixed(2),
