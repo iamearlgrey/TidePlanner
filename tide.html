@@ -1,0 +1,906 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Current Tide</title>
+    <style>
+      :root {
+        --deep: #07222e;
+        --mid: #0e3d52;
+        --bright: #00b3ff;
+        --foam: #eaf6fb;
+        --slate: #8fb8c9;
+        --sun: #ffe500;
+        --rise: #0bdf9f;
+        --fall: #ff9e80;
+        --card: rgba(255, 255, 255, 0.07);
+        --card-border: rgba(255, 255, 255, 0.14);
+                --mono: "SF Mono", ui-monospace, monospace;
+        
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: /*var(--mono);*/
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        background: radial-gradient(120% 90% at 50% -10%, var(--bright) 0%, var(--mid) 45%, var(--deep) 100%);
+        color: var(--foam);
+        overflow-x: hidden;
+      }
+      #app {
+        max-width: 460px;
+        margin: 0 auto;
+        min-height: 100vh;
+        padding: 22px 18px 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      /* ---------- header ---------- */
+      header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+      }
+      .place {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .place .label {
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        color: var(--slate);
+      }
+      .place .name {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--foam);
+      }
+      .clock {
+        font-size: 26px;
+        font-weight: 300;
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+      }
+      .clock small {
+        font-size: 14px;
+        font-weight: 400;
+        color: var(--slate);
+      }
+
+      /* ---------- chart ---------- */
+      .chart-wrap {
+        position: relative;
+        background: var(--card);
+        border: 1px solid var(--card-border);
+        border-radius: 22px;
+        padding: 18px 6px 10px;
+        backdrop-filter: blur(6px);
+      }
+      .chart-wrap svg {
+        display: block;
+        width: 100%;
+        height: auto;
+        overflow: hidden;
+      }
+      .day-tag {
+        position: absolute;
+        top: 8px;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        color: var(--slate);
+      }
+      .axis-label {
+        font-size: 10.5px;
+        fill: var(--slate);
+      }
+      .grid-line {
+        stroke: rgba(255, 255, 255, 0.1);
+        stroke-width: 1;
+      }
+      .wave-fill {
+        fill: url(#waveGradient);
+      }
+      .wave-line {
+        fill: none;
+        stroke: var(--foam);
+        stroke-width: 6;
+        stroke-linecap: round;
+        /*stroke-linejoin: round;*/
+      }
+      .now-line {
+        stroke: rgba(255, 255, 255, 0.55);
+        stroke-width: 1.4;
+        stroke-dasharray: 3 4;
+      }
+      .now-dot-outer {
+        fill: var(--deep);
+        stroke: var(--foam);
+        stroke-width: 2.5;
+      }
+      .now-dot-inner {
+        fill: var(--foam);
+      }
+      .extreme-dot {
+        fill: var(--foam);
+        stroke: var(--deep);
+        stroke-width: 1.5;
+      }
+      .extreme-label {
+        font-size: 11px;
+        font-weight: 600;
+        fill: var(--foam);
+      }
+      .extreme-sub {
+        font-size: 9.5px;
+        fill: var(--slate);
+      }
+      .sun-dot {
+        fill: var(--sun);
+        stroke: var(--mid);
+        stroke-width: 2px;
+      }
+
+      /* ---------- status card ---------- */
+      .status-card {
+        background: var(--card);
+        border: 1px solid var(--card-border);
+        border-radius: 22px;
+        padding: 18px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        backdrop-filter: blur(6px);
+      }
+      .status-left .status-title {
+        font-size: 14px;
+        color: var(--slate);
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .status-title.rising {
+        color: var(--rise);
+      }
+      .status-title.falling {
+        color: var(--fall);
+      }
+      .status-left .height {
+        font-size: 34px;
+        font-weight: 700;
+        line-height: 1;
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+      }
+      .height .unit {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--slate);
+      }
+      .arrow {
+        font-size: 22px;
+      }
+      .status-right {
+        text-align: right;
+        font-size: 13px;
+        color: var(--slate);
+        max-width: 150px;
+      }
+      .status-right .next-height {
+        color: var(--foam);
+        font-weight: 600;
+        font-size: 15px;
+      }
+
+      .legend {
+        display: flex;
+        gap: 16px;
+        font-size: 11px;
+        color: var(--slate);
+        padding: 0 4px;
+      }
+      .legend span {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .swatch {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+
+      .footnote {
+        text-align: center;
+        font-size: 11px;
+        color: var(--slate);
+        opacity: 0.7;
+        line-height: 1.5;
+      }
+
+      /* ---------- states ---------- */
+      .state-screen {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        text-align: center;
+        padding: 40px 20px;
+      }
+      .state-screen h1 {
+        font-size: 19px;
+        font-weight: 600;
+        margin: 0;
+      }
+      .state-screen p {
+        font-size: 14px;
+        color: var(--slate);
+        margin: 0;
+        max-width: 320px;
+        line-height: 1.5;
+      }
+      .spinner {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 3px solid rgba(255, 255, 255, 0.15);
+        border-top-color: var(--foam);
+        animation: spin 0.9s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      button.retry {
+        background: var(--foam);
+        color: var(--deep);
+        border: none;
+        font-size: 14px;
+        font-weight: 600;
+        padding: 10px 22px;
+        border-radius: 999px;
+        cursor: pointer;
+      }
+      button.retry:focus-visible,
+      .info-btn:focus-visible {
+        outline: 2px solid var(--foam);
+        outline-offset: 2px;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .spinner {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <!-- Loading state -->
+      <div id="loadingState" class="state-screen">
+        <div class="spinner" role="status" aria-label="Loading"></div>
+        <h1 id="loadingTitle">Finding your tide station</h1>
+        <p id="loadingSub">Locating you and pulling the nearest NOAA tide station.</p>
+      </div>
+
+      <!-- Error state -->
+      <div id="errorState" class="state-screen hidden">
+        <h1 id="errorTitle">Couldn't load tide data</h1>
+        <p id="errorSub">Something went wrong.</p>
+        <button class="retry" id="retryBtn">Try again</button>
+      </div>
+
+      <!-- Main content -->
+      <div id="mainState" class="hidden" style="display: flex; flex-direction: column; gap: 18px">
+        <header>
+          <div class="place">
+            <div class="label">NEAREST STATION</div>
+            <div class="name" id="stationName">—</div>
+          </div>
+          <div class="clock" id="clockNow">--:-- <small>--</small></div>
+        </header>
+
+        <div class="chart-wrap">
+          <div class="day-tag" id="dayTag" style="right: 14px"></div>
+          <svg id="chart" viewBox="0 0 400 210" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="waveGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#EAF6FB" stop-opacity="0.30" />
+                <stop offset="100%" stop-color="#EAF6FB" stop-opacity="0.02" />
+              </linearGradient>
+            </defs>
+            <g id="gridLayer"></g>
+            <g id="waveLayer"></g>
+            
+            <g id="extremeLayer"></g>
+            <g id="nowLayer"></g>
+            <g id="axisLayer"></g>
+            <g id="sunLayer"></g>
+          </svg>
+        </div>
+
+        <div class="legend">
+          <span><span class="swatch" style="background: var(--sun)"></span>Sunrise / sunset</span>
+          <span><span class="swatch" style="background: var(--foam)"></span>High / low tide</span>
+        </div>
+
+        <div class="status-card">
+          <div class="status-left">
+            <div class="status-title" id="statusTitle">Tide —</div>
+            <div class="height">
+              <span id="curHeight">--</span><span class="unit">ft</span> <span class="arrow" id="curArrow"></span>
+            </div>
+          </div>
+          <div class="status-right" id="nextExtreme">—</div>
+        </div>
+
+        <div class="footnote" id="footnote">Predictions from NOAA CO-OPS · sun times from sunrise-sunset.org</div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const $ = (id) => document.getElementById(id);
+        const loadingState = $("loadingState"),
+          errorState = $("errorState"),
+          mainState = $("mainState");
+
+        const state = {
+          lat: null,
+          lon: null,
+          station: null,
+          curve: [], // [{t: Date, v: number}]
+          extremes: [], // [{t: Date, v: number, type: 'H'|'L'}]
+          sunEvents: [], // [{t: Date, type: 'sunrise'|'sunset'}]
+          refreshTimer: null,
+          tickTimer: null
+        };
+
+        const WINDOW_HOURS = 24; // total window width shown (centered on now)
+        const HALF = WINDOW_HOURS / 2;
+
+        function showLoading(title, sub) {
+          loadingState.classList.remove("hidden");
+          errorState.classList.add("hidden");
+          mainState.classList.add("hidden");
+          if (title) $("loadingTitle").textContent = title;
+          if (sub) $("loadingSub").textContent = sub;
+        }
+        function showError(title, sub) {
+          loadingState.classList.add("hidden");
+          errorState.classList.remove("hidden");
+          mainState.classList.add("hidden");
+          $("errorTitle").textContent = title;
+          $("errorSub").textContent = sub;
+        }
+        function showMain() {
+          loadingState.classList.add("hidden");
+          errorState.classList.add("hidden");
+          mainState.classList.remove("hidden");
+        }
+
+        function haversine(lat1, lon1, lat2, lon2) {
+          const R = 3958.8; // miles
+          const toRad = (d) => (d * Math.PI) / 180;
+          const dLat = toRad(lat2 - lat1),
+            dLon = toRad(lon2 - lon1);
+          const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+          return 2 * R * Math.asin(Math.sqrt(a));
+        }
+
+        function pad(n) {
+          return n.toString().padStart(2, "0");
+        }
+        function fmtDateApi(d) {
+          return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+        }
+        function fmtClock(d) {
+          let h = d.getHours(),
+            m = d.getMinutes();
+          const ap = h >= 12 ? "PM" : "AM";
+          h = h % 12;
+          if (h === 0) h = 12;
+          return `${h}:${pad(m)} ${ap}`;
+        }
+        function fmtClockShort(d) {
+          let h = d.getHours(),
+            m = d.getMinutes();
+          const ap = h >= 12 ? "PM" : "AM";
+          h = h % 12;
+          if (h === 0) h = 12;
+          return { main: `${h}:${pad(m)}`, ap };
+        }
+
+        // ---------- data fetching ----------
+
+        async function findNearestStation(lat, lon) {
+          const res = await fetch(
+            "https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations.json?type=tidepredictions&units=english"
+          );
+          if (!res.ok) throw new Error("station-list");
+          const json = await res.json();
+          let best = null,
+            bestDist = Infinity;
+          for (const s of json.stations) {
+            if (typeof s.lat !== "number" || typeof s.lng !== "number") continue;
+            const d = haversine(lat, lon, s.lat, s.lng);
+            if (d < bestDist) {
+              bestDist = d;
+              best = s;
+            }
+          }
+          if (!best) throw new Error("no-station");
+          return { id: best.id, name: best.name, lat: best.lat, lon: best.lng, distance: bestDist };
+        }
+
+        async function fetchPredictions(stationId, beginDate, endDate) {
+          const base = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter";
+          const common = `station=${stationId}&begin_date=${fmtDateApi(beginDate)}&end_date=${fmtDateApi(endDate)}&datum=MLLW&units=english&time_zone=lst_ldt&application=tide-web-app&format=json&product=predictions`;
+
+          const [curveRes, hiloRes] = await Promise.all([
+            fetch(`${base}?${common}&interval=6`),
+            fetch(`${base}?${common}&interval=hilo`)
+          ]);
+          if (!curveRes.ok || !hiloRes.ok) throw new Error("predictions");
+          const curveJson = await curveRes.json();
+          const hiloJson = await hiloRes.json();
+          if (curveJson.error || hiloJson.error) throw new Error("predictions-error");
+
+          function parseLocal(str) {
+            // NOAA returns "YYYY-MM-DD HH:MM" in station local time; parse as local wall clock
+            return new Date(str.replace(" ", "T") + ":00");
+          }
+
+          const curve = (curveJson.predictions || []).map((p) => ({ t: parseLocal(p.t), v: parseFloat(p.v) }));
+          const extremes = (hiloJson.predictions || []).map((p) => ({
+            t: parseLocal(p.t),
+            v: parseFloat(p.v),
+            type: p.type
+          }));
+          return { curve, extremes };
+        }
+
+        async function fetchSunEvents(lat, lon, dates) {
+          const events = [];
+          for (const d of dates) {
+            const ds = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+            const url = `https://api.sunrise-sunset.org/json?lat=${lat}&lng=${lon}&date=${ds}&formatted=0`;
+            try {
+              const res = await fetch(url);
+              if (!res.ok) continue;
+              const json = await res.json();
+              if (json.status !== "OK") continue;
+              events.push({ t: new Date(json.results.sunrise), type: "sunrise" });
+              events.push({ t: new Date(json.results.sunset), type: "sunset" });
+            } catch (e) {
+              /* non-fatal */
+            }
+          }
+          return events;
+        }
+
+        // ---------- demo / mock mode (no location or network needed) ----------
+        // Open the file with ?demo=1 appended to the URL to preview the UI with
+        // synthetic data — handy for editing CSS without granting location access.
+        function isDemoMode() {
+          return new URLSearchParams(location.search).get("demo") === "1";
+        }
+
+        function generateMockData() {
+          const now = new Date();
+          state.station = { id: "9999999", name: "Mavericks Beach (Demo)", lat: 37.4914, lon: -122.5011, distance: 0 };
+
+          // synthetic tide: a semidiurnal component (two highs/lows a day, ~12.42h)
+          // plus a smaller diurnal component (~23.93h) so the two daily highs/lows
+          // are unequal, like a real mixed tide — both are clean sinusoids, so the
+          // resulting curve has no extra wobble to smooth out.
+          const semiPeriodMs = 12.42 * 3600 * 1000;
+          const diurnalPeriodMs = 23.93 * 3600 * 1000;
+          const mean = 3.0,
+            semiAmp = 1.9,
+            diurnalAmp = 0.9;
+          const t0 = new Date(now);
+          t0.setDate(t0.getDate() - 1);
+          t0.setHours(0, 0, 0, 0);
+          const t1 = new Date(now);
+          t1.setDate(t1.getDate() + 2);
+          t1.setHours(0, 0, 0, 0);
+
+          const curve = [];
+          for (let t = new Date(t0); t <= t1; t = new Date(t.getTime() + 6 * 60 * 1000)) {
+            const semiPhase = (t.getTime() / semiPeriodMs) * 2 * Math.PI;
+            const diurnalPhase = (t.getTime() / diurnalPeriodMs) * 2 * Math.PI;
+            const v = mean + semiAmp * Math.sin(semiPhase) + diurnalAmp * Math.sin(diurnalPhase);
+            curve.push({ t: new Date(t), v });
+          }
+
+          // derive extremes from local maxima/minima of the curve
+          const extremes = [];
+          for (let i = 1; i < curve.length - 1; i++) {
+            const a = curve[i - 1].v,
+              b = curve[i].v,
+              c = curve[i + 1].v;
+            if (b > a && b > c) extremes.push({ t: curve[i].t, v: b, type: "H" });
+            if (b < a && b < c) extremes.push({ t: curve[i].t, v: b, type: "L" });
+          }
+
+          // sunrise ~6:45am, sunset ~7:20pm for each day in range
+          const sunEvents = [];
+          for (let d = new Date(t0); d <= t1; d = new Date(d.getTime() + 24 * 3600 * 1000)) {
+            const sunrise = new Date(d);
+            sunrise.setHours(6, 45, 0, 0);
+            const sunset = new Date(d);
+            sunset.setHours(19, 20, 0, 0);
+            sunEvents.push({ t: sunrise, type: "sunrise" });
+            sunEvents.push({ t: sunset, type: "sunset" });
+          }
+
+          state.curve = curve;
+          state.extremes = extremes;
+          state.sunEvents = sunEvents;
+        }
+
+        async function loadAll() {
+          if (isDemoMode()) {
+            showLoading("Loading demo data", "Generating a synthetic tide curve for preview.");
+            generateMockData();
+            showMain();
+            render();
+            if (state.tickTimer) clearInterval(state.tickTimer);
+            state.tickTimer = setInterval(render, 30000);
+            return;
+          }
+
+          showLoading("Finding your tide station", "Locating you and pulling the nearest NOAA tide station.");
+          if (state.refreshTimer) clearInterval(state.refreshTimer);
+          if (state.tickTimer) clearInterval(state.tickTimer);
+
+          if (!navigator.geolocation) {
+            showError(
+              "Location unavailable",
+              "This browser can\u2019t provide your location, which is needed to find the nearest tide station."
+            );
+            return;
+          }
+
+          navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+              state.lat = pos.coords.latitude;
+              state.lon = pos.coords.longitude;
+              try {
+                showLoading("Finding your tide station", "Searching NOAA stations near you.");
+                state.station = await findNearestStation(state.lat, state.lon);
+
+                showLoading("Loading tide predictions", `Pulling data for ${state.station.name}.`);
+                const now = new Date();
+                const begin = new Date(now);
+                begin.setDate(begin.getDate() - 1);
+                const end = new Date(now);
+                end.setDate(end.getDate() + 2);
+                const { curve, extremes } = await fetchPredictions(state.station.id, begin, end);
+                state.curve = curve;
+                state.extremes = extremes;
+
+                const d0 = new Date(now);
+                d0.setDate(d0.getDate() - 1);
+                const d1 = new Date(now);
+                const d2 = new Date(now);
+                d2.setDate(d2.getDate() + 1);
+                state.sunEvents = await fetchSunEvents(state.station.lat, state.station.lon, [d0, d1, d2]);
+
+                showMain();
+                render();
+
+                // keep "now" centered: redraw every 30s, refetch data every 10 min
+                state.tickTimer = setInterval(render, 30000);
+                state.refreshTimer = setInterval(loadAll, 10 * 60 * 1000);
+              } catch (err) {
+                console.error(err);
+                showError(
+                  "Couldn\u2019t load tide data",
+                  "There was a problem reaching NOAA\u2019s tide service. Check your connection and try again."
+                );
+              }
+            },
+            (err) => {
+              let msg = "Enable location access so the app can find your nearest tide station.";
+              if (err.code === 1)
+                msg = "Location access was denied. Allow location access in your browser settings, then try again.";
+              showError("Location needed", msg);
+            },
+            { enableHighAccuracy: false, timeout: 12000, maximumAge: 5 * 60000 }
+          );
+        }
+
+        // ---------- rendering ----------
+
+        const VB_W = 400,
+          VB_H = 210;
+        const PAD_L = 8,
+          PAD_R = 8,
+          PAD_TOP = 34,
+          PAD_BOTTOM = 34;
+        const PLOT_W = VB_W - PAD_L - PAD_R;
+        const PLOT_H = VB_H - PAD_TOP - PAD_BOTTOM;
+
+        function xForTime(t, windowStart, windowEnd) {
+          const frac = (t - windowStart) / (windowEnd - windowStart);
+          return PAD_L + frac * PLOT_W;
+        }
+        function yForValue(v, minV, maxV) {
+          const frac = (v - minV) / (maxV - minV || 1);
+          return PAD_TOP + (1 - frac) * PLOT_H;
+        }
+
+        function resamplePoints(points, maxPoints) {
+          if (points.length <= maxPoints) return points;
+          const stride = Math.ceil(points.length / maxPoints);
+          const out = [];
+          for (let i = 0; i < points.length; i += stride) out.push(points[i]);
+          return out;
+        }
+
+        function smoothPath(points) {
+          // Catmull-Rom to cubic bezier for a smooth curve through points.
+          // Phantom points beyond the first/last are extrapolated linearly
+          // (instead of duplicating the endpoint) so the curve doesn't flatten
+          // or kink right at the edges of the visible window.
+          if (points.length < 2) return "";
+          const reflect = (a, b) => ({ x: b.x + (b.x - a.x), y: b.y + (b.y - a.y) });
+          let d = `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;
+          for (let i = 0; i < points.length - 1; i++) {
+            const p1 = points[i];
+            const p2 = points[i + 1];
+            const p0 = points[i - 1] || reflect(p2, p1);
+            const p3 = points[i + 2] || reflect(p1, p2);
+
+            const cp1x = p1.x + (p2.x - p0.x) / 7;
+            const cp1y = p1.y + (p2.y - p0.y) / 7;
+            const cp2x = p2.x - (p3.x - p1.x) / 7;
+            const cp2y = p2.y - (p3.y - p1.y) / 7;
+            d += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
+          }
+          return d;
+        }
+
+        function interpolateHeightAt(t) {
+          const c = state.curve;
+          if (!c.length) return null;
+          if (t <= c[0].t) return c[0].v;
+          if (t >= c[c.length - 1].t) return c[c.length - 1].v;
+          for (let i = 0; i < c.length - 1; i++) {
+            if (c[i].t <= t && t <= c[i + 1].t) {
+              const frac = (t - c[i].t) / (c[i + 1].t - c[i].t);
+              return c[i].v + frac * (c[i + 1].v - c[i].v);
+            }
+          }
+          return c[c.length - 1].v;
+        }
+
+        function svgEl(tag, attrs) {
+          const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+          for (const k in attrs) el.setAttribute(k, attrs[k]);
+          return el;
+        }
+
+        function render() {
+          if (!state.curve.length) return;
+          const now = new Date();
+          const windowStart = new Date(now.getTime() - HALF * 3600 * 1000);
+          const windowEnd = new Date(now.getTime() + HALF * 3600 * 1000);
+
+          const visible = state.curve.filter((p) => p.t >= windowStart && p.t <= windowEnd);
+          // ensure at least the two boundary points exist by including neighbors
+          const withMargin = state.curve.filter(
+            (p) =>
+              p.t >= new Date(windowStart.getTime() - 3600 * 1000) && p.t <= new Date(windowEnd.getTime() + 3600 * 1000)
+          );
+          const dataSet = withMargin.length ? withMargin : visible;
+          if (!dataSet.length) return;
+
+          const values = dataSet.map((p) => p.v);
+          const minV = Math.min(...values),
+            maxV = Math.max(...values);
+          const spread = maxV - minV || 1;
+          const yMin = minV - spread * 0.25;
+          const yMax = maxV + spread * 0.25;
+
+          // Build the spline's anchor points from the true high/low extremes plus
+          // the two window edges, instead of all 260 raw 6-minute prediction points.
+          // A tide curve only has a handful of real peaks and troughs — connecting
+          // just those smoothly matches the real shape without the tiny irregularities
+          // a spline can develop when packed with hundreds of closely-spaced points.
+          const anchors = [];
+          const startV = interpolateHeightAt(windowStart);
+          if (startV !== null) anchors.push({ t: windowStart, v: startV });
+          state.extremes.forEach((ex) => {
+            if (ex.t > windowStart && ex.t < windowEnd) anchors.push({ t: ex.t, v: ex.v });
+          });
+          const endV = interpolateHeightAt(windowEnd);
+          if (endV !== null) anchors.push({ t: windowEnd, v: endV });
+          anchors.sort((a, b) => a.t - b.t);
+
+          const points = anchors.map((p) => ({
+            x: xForTime(p.t, windowStart, windowEnd),
+            y: yForValue(p.v, yMin, yMax)
+          }));
+
+          /*          const rawPoints = dataSet.map((p) => ({
+            x: xForTime(p.t, windowStart, windowEnd),
+            y: yForValue(p.v, yMin, yMax)
+          }));
+          const points = resamplePoints(rawPoints, 300);*/
+
+          // ---- grid & axis (every 6 hours) ----
+          const gridLayer = $("gridLayer");
+          gridLayer.innerHTML = "";
+          const axisLayer = $("axisLayer");
+          axisLayer.innerHTML = "";
+          const firstTick = new Date(windowStart);
+          firstTick.setMinutes(0, 0, 0);
+          firstTick.setHours(Math.ceil(firstTick.getHours() / 6) * 6);
+          let prevDay = null;
+          for (let t = new Date(firstTick); t <= windowEnd; t = new Date(t.getTime() + 6 * 3600 * 1000)) {
+            const x = xForTime(t, windowStart, windowEnd);
+            gridLayer.appendChild(
+              svgEl("line", {
+                class: "grid-line",
+                x1: x.toFixed(2),
+                y1: PAD_TOP,
+                x2: x.toFixed(2),
+                y2: VB_H - PAD_BOTTOM + 6
+              })
+            );
+            const { main, ap } = fmtClockShort(t);
+            const label = t.getHours() === 0 ? "12AM" : t.getHours() === 12 ? "12PM" : `${main.split(":")[0]}${ap}`;
+            const txt = svgEl("text", {
+              class: "axis-label",
+              x: x.toFixed(2),
+              y: VB_H - PAD_BOTTOM + 22,
+              "text-anchor": "middle"
+            });
+            txt.textContent = label;
+            axisLayer.appendChild(txt);
+          }
+
+          // day tag: show upcoming day name near right side when window crosses midnight
+          const dayTag = $("dayTag");
+          const startDay = windowStart.getDate();
+          const endDay = windowEnd.getDate();
+          if (startDay !== endDay) {
+            dayTag.textContent = windowEnd.toLocaleDateString(undefined, { weekday: "long" }).toUpperCase();
+          } else {
+            dayTag.textContent = "";
+          }
+
+          // ---- wave path + fill ----
+          const waveLayer = $("waveLayer");
+          waveLayer.innerHTML = "";
+          const linePath = smoothPath(points);
+          const fillPath = `${linePath} L ${points[points.length - 1].x.toFixed(2)} ${VB_H - PAD_BOTTOM} L ${points[0].x.toFixed(2)} ${VB_H - PAD_BOTTOM} Z`;
+          waveLayer.appendChild(svgEl("path", { class: "wave-fill", d: fillPath }));
+          waveLayer.appendChild(svgEl("path", { class: "wave-line", d: linePath }));
+
+          // ---- sun events ----
+          const sunLayer = $("sunLayer");
+          sunLayer.innerHTML = "";
+          state.sunEvents.forEach((ev) => {
+            if (ev.t < windowStart || ev.t > windowEnd) return;
+            const v = interpolateHeightAt(ev.t);
+            if (v === null) return;
+            const x = xForTime(ev.t, windowStart, windowEnd);
+            const y = yForValue(v, yMin, yMax);
+            sunLayer.appendChild(svgEl("circle", { class: "sun-dot", cx: x.toFixed(2), cy: y.toFixed(2), r: 4 }));
+          });
+
+          // ---- high/low extremes ----
+          const extremeLayer = $("extremeLayer");
+          extremeLayer.innerHTML = "";
+          state.extremes.forEach((ex) => {
+            if (ex.t < windowStart || ex.t > windowEnd) return;
+            const x = xForTime(ex.t, windowStart, windowEnd);
+            const y = yForValue(ex.v, yMin, yMax);
+            extremeLayer.appendChild(
+              svgEl("circle", { class: "extreme-dot", cx: x.toFixed(2), cy: y.toFixed(2), r: 4 })
+            );
+            const isHigh = ex.type === "H";
+            const labelY = isHigh ? y - 22 : y + 28;
+            const t1 = svgEl("text", {
+              class: "extreme-label",
+              x: x.toFixed(2),
+              y: labelY.toFixed(2),
+              "text-anchor": "middle"
+            });
+            t1.textContent = `${ex.v.toFixed(1)}ft`;
+            const t2 = svgEl("text", {
+              class: "extreme-sub",
+              x: x.toFixed(2),
+              y: (labelY + 12).toFixed(2),
+              "text-anchor": "middle"
+            });
+            t2.textContent = fmtClock(ex.t);
+            extremeLayer.appendChild(t1);
+            extremeLayer.appendChild(t2);
+          });
+
+          // ---- now marker ----
+          const nowLayer = $("nowLayer");
+          nowLayer.innerHTML = "";
+          const nowV = interpolateHeightAt(now);
+          if (nowV !== null) {
+            const x = xForTime(now, windowStart, windowEnd);
+            const y = yForValue(nowV, yMin, yMax);
+            nowLayer.appendChild(
+              svgEl("line", {
+                class: "now-line",
+                x1: x.toFixed(2),
+                y1: y.toFixed(2),
+                x2: x.toFixed(2),
+                y2: VB_H - PAD_BOTTOM
+              })
+            );
+            nowLayer.appendChild(svgEl("circle", { class: "now-dot-outer", cx: x.toFixed(2), cy: y.toFixed(2), r: 7 }));
+            nowLayer.appendChild(
+              svgEl("circle", { class: "now-dot-inner", cx: x.toFixed(2), cy: y.toFixed(2), r: 2.6 })
+            );
+
+            // rising/falling
+            const deltaT = 4 * 60 * 1000;
+            const before = interpolateHeightAt(new Date(now.getTime() - deltaT));
+            const rising = nowV > before;
+
+            $("curHeight").textContent = nowV.toFixed(1);
+            $("curArrow").textContent = rising ? "\u2191" : "\u2193";
+            $("curArrow").style.color = rising ? "var(--rise)" : "var(--fall)";
+            const statusTitle = $("statusTitle");
+            statusTitle.textContent = `Tide ${rising ? "Rising" : "Falling"}`;
+            statusTitle.className = "status-title " + (rising ? "rising" : "falling");
+
+            // next extreme after now
+            const upcoming = state.extremes.filter((ex) => ex.t > now).sort((a, b) => a.t - b.t)[0];
+            if (upcoming) {
+              const label = upcoming.type === "H" ? "High" : "Low";
+              $("nextExtreme").innerHTML =
+                `Next ${label.toLowerCase()}<br><span class="next-height">${upcoming.v.toFixed(1)}ft</span> at ${fmtClock(upcoming.t)}`;
+            } else {
+              $("nextExtreme").textContent = "";
+            }
+          }
+
+          // header
+          $("stationName").textContent = state.station.name;
+          const clk = fmtClockShort(now);
+          $("clockNow").innerHTML = `${clk.main} <small>${clk.ap}</small>`;
+
+          console.log(dataSet.map((p) => p.v));
+        }
+
+        $("retryBtn").addEventListener("click", loadAll);
+
+        loadAll();
+      })();
+    </script>
+  </body>
+</html>
