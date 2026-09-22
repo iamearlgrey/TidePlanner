@@ -28,6 +28,17 @@
         font-family: "SF Mono";
         src: url("fonts/SFMono-Regular.ttf");
       }
+      .safari-tint-top, .safari-tint-bottom {
+  position: fixed;
+  left: 0;
+  width: 100vw;
+  height: 4px;
+  background-color: var(--bg); /* your page's actual background color */
+  visibility: hidden;
+  pointer-events: none;
+}
+.safari-tint-top { top: 0; }
+.safari-tint-bottom { bottom: 0; }
 
       :root {
         --bg: #0c2b30;
@@ -722,6 +733,8 @@ header .header-inner{
     </style>
   </head>
   <body>
+      <div class="safari-tint-top"></div>
+  <div class="safari-tint-bottom"></div>
     <header>
       <div class="header-inner">
       <div class="header-top">
