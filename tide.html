@@ -9,6 +9,18 @@
         font-family: "SF Mono";
         src: url("fonts/SFMono-Regular.ttf");
       }
+
+      .safari-tint-top, .safari-tint-bottom {
+  position: fixed;
+  left: 0;
+  width: 100vw;
+  height: 4px;
+  background-color: var(--bg); /* your page's actual background color */
+  visibility: hidden;
+  pointer-events: none;
+}
+.safari-tint-top { top: 0; }
+.safari-tint-bottom { bottom: 0; }
       
       :root {
         --deep: #07222e;
@@ -308,6 +320,9 @@
     </style>
   </head>
   <body>
+  <div class="safari-tint-top"></div>
+  <div class="safari-tint-bottom"></div>
+  <!-- rest of your page -->
     <div id="app">
       <!-- Loading state -->
       <div id="loadingState" class="state-screen">
